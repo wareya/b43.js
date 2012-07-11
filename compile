@@ -1,0 +1,4 @@
+#!/bin/sh
+coffee -o out -c src
+cp src/index.html out/index.html
+cp -R src/media out/media

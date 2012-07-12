@@ -2,14 +2,41 @@
 WIDTH = 800
 HEIGHT = 600
 MAP_SCALE = 6
-DEBUG = true
+DEBUG = false
 map = {}
-images = {
-    'media/ctf_truefort.png': null
-    'media/ctf_truefort_wm.png': null
-    'media/querly_red_0.png': null
-    'media/querly_red_1.png': null
-}
+currentmap = 'atalia'
+
+# different image storage format between entities and maps
+# probably change later to accomodate maps with several frames or layers & remove minor code duping
+
+images =
+    maps:
+        atalia:
+            bg:
+                urls: ['media/maps/ctf_atalia_bg.png']
+                data: []
+            wm:
+                urls: ['media/maps/ctf_atalia_wm.png']
+                data: []
+    entities:
+        char:
+            quote:
+                urls: [
+                    'media/entities/char/querly_red_0.png'
+                    'media/entities/char/querly_red_1.png'
+                ]
+                data: []
+
+
+preloadImages = []
+
+for key in Object.getOwnPropertyNames images.entities.char # Always preload all chars, weapons, and projectiles
+    preloadImages.push images.entities.char[key]
+    
+for key in Object.getOwnPropertyNames images.maps.atalia  #  T E M P O R A R Y  preload
+    preloadImages.push images.maps.atalia[key]
+    
+console.log preloadImages
 
 globalContext = null
 camX = 0
@@ -205,15 +232,18 @@ loadImages = (onDone) ->
         img.onload = () ->
             numdone += 1
             images[url] = img
-            if numdone == urls.length
+            if numdone == preloadImages.length
                 console.log 'Loaded ' + numdone + ' images'
                 onDone()
         img.onerror = () ->
             loadImage url
-
-    urls = Object.keys images
-    for url in urls
-        loadImage url
+    
+    loadFrames = (graphic) ->
+        for url in graphic.urls
+            graphic.data.push loadImage url
+    
+    for graphic in preloadImages
+        loadFrames graphic
 
 window.onload = () ->
     loadImages () ->
@@ -222,12 +252,14 @@ window.onload = () ->
 
         document.body.appendChild canvas
         globalContext = canvas.getContext '2d'
-
-        map.bg = images['media/ctf_truefort.png']
+        
+        map.bg = images.maps[currentmap].bg.data[0]
+        console.log map.bg
+        console.log images.entities.char.quote.data[0] ## HELP ajf, these end up being (function () {"use strict";return loadImage(url);}) AND I DON'T KNOW WHY ;-;
         [map.width, map.height] = [map.bg.width, map.bg.height]
         map.bg = preScale(map.bg, MAP_SCALE)
 
-        map.wm = decodeWM(images['media/ctf_truefort_wm.png'])
+        map.wm = decodeWM(images.maps[currentmap].wm.data[0])
 
         camFocus = new QuerlyRed()
         camFocus.x = map.bg.width / 2
@@ -263,7 +295,7 @@ class Character extends Entity
 class QuerlyRed extends Character
     constructor: () ->
         super()
-        frames = for i in [0..1]
-            images['media/querly_red_' + i + '.png']
+        image = images.entities.char.quote
+        frames = image.data[i]
         @sprite = new Sprite frames, 16, 20, [9, 23, 7, 31]
         @frameNum = 0

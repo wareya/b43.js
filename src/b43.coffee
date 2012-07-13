@@ -6,9 +6,6 @@ DEBUG = false
 map = {}
 currentmap = 'atalia'
 
-# different image storage format between entities and maps
-# probably change later to accomodate maps with several frames or layers & remove minor code duping
-
 images =
     maps:
         atalia:
@@ -30,10 +27,10 @@ images =
 
 preloadImages = []
 
-for key in Object.getOwnPropertyNames images.entities.char # Always preload all chars, weapons, and projectiles
+for key of images.entities.char # Always preload all chars, weapons, and projectiles
     preloadImages.push images.entities.char[key]
     
-for key in Object.getOwnPropertyNames images.maps.atalia  #  T E M P O R A R Y  preload
+for key of images.maps.atalia   #  T E M P O R A R Y  preload, to be removed when map system implemented
     preloadImages.push images.maps.atalia[key]
     
 console.log preloadImages
@@ -189,6 +186,7 @@ preScale = (img, scale) ->
     return cv
 
 decodeWM = (wm) ->
+    console.log wm
     canvas = document.createElement 'canvas'
     [canvas.width, canvas.height] = [wm.width, wm.height]
     
@@ -202,7 +200,8 @@ decodeWM = (wm) ->
     g = data[i + 1]
     b = data[i + 2]
     a = data[i + 3]
-
+    console.log "here: ", a
+    
     # decode to true/false values
     rows = []
     
@@ -294,7 +293,5 @@ class QuerlyRed extends Character
     constructor: () ->
         super()
         image = images.entities.char.quote
-        frames = []
-        frames.push image.data[i] for i in [0..1]
-        @sprite = new Sprite frames, 16, 20, [9, 23, 7, 31]
+        @sprite = new Sprite image.data, 16, 20, [9, 23, 7, 31]
         @frameNum = 0

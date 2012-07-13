@@ -225,25 +225,23 @@ wmPlaceFree = (x, y) ->
 loadImages = (onDone) ->
     numdone = 0
     console.log 'Loading images...'
-    loadImage = (url) ->
+    loadImage = (url, graphic) ->
         img = document.createElement 'img'
         img.src = url
-        console.log 'Loading image: ' + img.src
+        console.log "Loading image ", graphic, " at ", url
         img.onload = () ->
             numdone += 1
-            images[url] = img
-            if numdone == preloadImages.length
-                console.log 'Loaded ' + numdone + ' images'
+            console.log url, " done"
+            graphic.data.push img
+            if numdone == preloadImages.length + 1
+                console.log 'Loaded ' + numdone + ' image'
                 onDone()
         img.onerror = () ->
             loadImage url
     
-    loadFrames = (graphic) ->
-        for url in graphic.urls
-            graphic.data.push loadImage url
-    
     for graphic in preloadImages
-        loadFrames graphic
+        for url in graphic.urls
+            loadImage url, graphic
 
 window.onload = () ->
     loadImages () ->
@@ -254,21 +252,21 @@ window.onload = () ->
         globalContext = canvas.getContext '2d'
         
         map.bg = images.maps[currentmap].bg.data[0]
-        console.log map.bg
-        console.log images.entities.char.quote.data[0] ## HELP ajf, these end up being (function () {"use strict";return loadImage(url);}) AND I DON'T KNOW WHY ;-;
+        map.wm = images.maps[currentmap].wm.data[0]
+        
         [map.width, map.height] = [map.bg.width, map.bg.height]
         map.bg = preScale(map.bg, MAP_SCALE)
-
-        map.wm = decodeWM(images.maps[currentmap].wm.data[0])
+        
+        map.wm = decodeWM(map.wm)
 
         camFocus = new QuerlyRed()
         camFocus.x = map.bg.width / 2
-        camFocus.y = 15
+        camFocus.y = map.bg.height / 2
         entities.push camFocus
 
         otherQuot = new QuerlyRed()
-        otherQuot.x = camFocus.x + 25
-        otherQuot.y = 15
+        otherQuot.x = camFocus.x + 100
+        otherQuot.y = map.bg.height / 2
         entities.push otherQuot
 
         window.setInterval onTick, 1000 / 30
@@ -296,6 +294,7 @@ class QuerlyRed extends Character
     constructor: () ->
         super()
         image = images.entities.char.quote
-        frames = image.data[i]
+        frames = []
+        frames.push image.data[i] for i in [0..1]
         @sprite = new Sprite frames, 16, 20, [9, 23, 7, 31]
         @frameNum = 0
